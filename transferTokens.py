@@ -4,6 +4,7 @@ import csv
 import json
 import web3
 import argparse
+import logging
 
 from getpass import getpass
 from web3 import Web3, HTTPProvider
@@ -53,17 +54,20 @@ if __name__ == '__main__':
                 continue
 
             try:
-                amount = int(row['orderAmount'])
+                amount = Web3.toWei(row['orderAmount'], 'ether')
                 toAddress = Web3.toChecksumAddress(row['orderAddress'])
-
-                try:
-                    print("Transfer to: {} -> {}".format(toAddress, amount))
-                    
-                    contract.transact({'from': fromAddress})\
-                            .transfer(toAddress, amount)
-                    
-                except Exception as e:
-                    print("Error", e)
             
             except Exception as e:
-                print(e)
+                print("Invalid Data. Skipping :: ", e)
+                continue
+
+            try:
+                print("Transfer to: {} -> {}".format(toAddress, amount))
+                ret = contract.transact({'from': fromAddress})\
+                              .transfer(toAddress, amount)
+
+                print "\t TX :: ", ret
+                
+            except Exception as e:
+                print("Failed :: ", e)
+
